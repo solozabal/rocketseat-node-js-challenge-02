@@ -44,7 +44,8 @@ const create = async (req, res, next) => {
 const list = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { page, limit } = req.query;
+    // Values are already validated and transformed by the middleware
+    const { page, limit, date_from, date_to, is_on_diet } = req.query;
 
     logger.info({
       request_id: req.id,
@@ -53,11 +54,20 @@ const list = async (req, res, next) => {
       userId,
       page,
       limit,
+      date_from,
+      date_to,
+      is_on_diet,
     });
 
     const result = await mealService.listMeals(
       userId,
-      { page: Number(page) || undefined, limit: Number(limit) || undefined },
+      {
+        page,
+        limit,
+        date_from,
+        date_to,
+        is_on_diet,
+      },
       req.id
     );
 

@@ -57,24 +57,56 @@ const createMeal = async ({ name, description, datetime, is_on_diet }, userId, r
 };
 
 /**
- * List meals for a user with pagination
+ * List meals for a user with pagination and filters
  * @param {string} userId - User ID (owner)
- * @param {Object} options - Pagination options
+ * @param {Object} options - Pagination and filter options
  * @param {number} [options.page=1] - Page number
  * @param {number} [options.limit=20] - Items per page (max 100)
+ * @param {string} [options.date_from] - Filter by date from (YYYY-MM-DD)
+ * @param {string} [options.date_to] - Filter by date to (YYYY-MM-DD)
+ * @param {boolean} [options.is_on_diet] - Filter by is_on_diet
  * @param {string} [requestId] - Request ID for logging
  * @returns {Promise<Object>} Paginated meals
  */
-const listMeals = async (userId, { page = DEFAULT_PAGE, limit = DEFAULT_LIMIT } = {}, requestId) => {
+const listMeals = async (userId, { page = DEFAULT_PAGE, limit = DEFAULT_LIMIT, date_from, date_to, is_on_diet } = {}, requestId) => {
   // Ensure limit doesn't exceed max
   const safeLimit = Math.min(Math.max(1, limit), MAX_LIMIT);
   const safePage = Math.max(1, page);
   const skip = (safePage - 1) * safeLimit;
 
+  // Build where clause with filters
+  const where = { user_id: userId };
+
+  // Date range filter - uses index [user_id, datetime]
+  if (date_from || date_to) {
+    where.datetime = {};
+    if (date_from) {
+      // Start of day in UTC
+      where.datetime.gte = new Date(`${date_from}T00:00:00.000Z`);
+    }
+    if (date_to) {
+      // End of day in UTC
+      where.datetime.lte = new Date(`${date_to}T23:59:59.999Z`);
+    }
+  }
+
+  // is_on_diet filter - convert string to boolean if needed
+  if (is_on_diet !== undefined && is_on_diet !== null) {
+    // Handle both boolean and string values
+    if (typeof is_on_diet === 'boolean') {
+      where.is_on_diet = is_on_diet;
+    } else if (is_on_diet === 'true') {
+      where.is_on_diet = true;
+    } else if (is_on_diet === 'false') {
+      where.is_on_diet = false;
+    }
+    // If invalid value (like 'yes'), don't add to filter (ignore)
+  }
+
   // Get meals and total count in parallel
   const [meals, total] = await Promise.all([
     prisma.meal.findMany({
-      where: { user_id: userId },
+      where,
       orderBy: { datetime: 'desc' },
       skip,
       take: safeLimit,
@@ -88,9 +120,7 @@ const listMeals = async (userId, { page = DEFAULT_PAGE, limit = DEFAULT_LIMIT } 
         updated_at: true,
       },
     }),
-    prisma.meal.count({
-      where: { user_id: userId },
-    }),
+    prisma.meal.count({ where }),
   ]);
 
   const totalPages = Math.ceil(total / safeLimit);
@@ -103,6 +133,7 @@ const listMeals = async (userId, { page = DEFAULT_PAGE, limit = DEFAULT_LIMIT } 
     page: safePage,
     limit: safeLimit,
     total,
+    filters: { date_from, date_to, is_on_diet },
   });
 
   return {
