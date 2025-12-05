@@ -5,41 +5,7 @@
 
 const { prisma } = require('../config/database');
 const logger = require('../config/logger');
-
-/**
- * Calculate best streak from meals ordered by datetime asc
- * Rules:
- * - Increment streak on is_on_diet=true
- * - Reset streak on is_on_diet=false
- * - Days without meals don't break the streak
- * - On tie, return the first sequence found
- * 
- * @param {Array} meals - Meals ordered by datetime asc
- * @returns {number} Best streak count
- */
-const calculateBestStreak = (meals) => {
-  if (meals.length === 0) {
-    return 0;
-  }
-
-  let currentStreak = 0;
-  let bestStreak = 0;
-
-  for (const meal of meals) {
-    if (meal.is_on_diet) {
-      currentStreak++;
-      // Update best streak if current is better
-      if (currentStreak > bestStreak) {
-        bestStreak = currentStreak;
-      }
-    } else {
-      // Reset streak on off-diet meal
-      currentStreak = 0;
-    }
-  }
-
-  return bestStreak;
-};
+const { calculateBestStreak } = require('../utils/streakCalculator');
 
 /**
  * Get diet metrics for a user
@@ -89,5 +55,4 @@ const getMetrics = async (userId, requestId) => {
 
 module.exports = {
   getMetrics,
-  calculateBestStreak,
 };

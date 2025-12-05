@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 
 const logger = require('./config/logger');
-const { requestIdMiddleware, notFoundHandler, errorHandler } = require('./middlewares');
+const { requestIdMiddleware, notFoundHandler, errorHandler, rateLimiter } = require('./middlewares');
 const routes = require('./routes');
 
 const app = express();
@@ -15,12 +15,19 @@ const isProduction = process.env.NODE_ENV === 'production';
 // Request ID middleware - must be first to ensure all logs have request_id
 app.use(requestIdMiddleware);
 
+// Rate limiting - 100 requests per 15 minutes per IP
+app.use(rateLimiter);
+
 // CORS configuration
+const corsOrigins = isProduction
+  ? (process.env.CORS_ORIGIN || '').split(',').map(origin => origin.trim()).filter(Boolean)
+  : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000'];
+
 const corsOptions = {
-  origin: isProduction
-    ? process.env.CORS_ORIGIN
-    : 'http://localhost:3000',
+  origin: corsOrigins.length > 0 ? corsOrigins : false,
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 app.use(cors(corsOptions));
 
