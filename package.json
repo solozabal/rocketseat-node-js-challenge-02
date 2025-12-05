@@ -9,7 +9,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "db:test": "node src/scripts/testConnection.js"
+    "db:test": "node src/scripts/testConnection.js",
+    "db:test-models": "node src/scripts/testModels.js"
   },
   "keywords": [
     "nodejs",
