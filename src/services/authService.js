@@ -174,6 +174,91 @@ const revokeAllUserTokens = async (userId) => {
   });
 };
 
+/**
+ * Rotate refresh token - validate, revoke old, issue new pair
+ * @param {string} token - Current refresh token
+ * @param {string} [requestId] - Request ID for logging
+ * @returns {Promise<Object>} New token pair { token, refresh_token }
+ */
+const rotateRefreshToken = async (token, requestId) => {
+  // Find the refresh token in database
+  const existingToken = await prisma.refreshToken.findUnique({
+    where: { token },
+    include: { user: true },
+  });
+
+  // Check if token exists
+  if (!existingToken) {
+    logger.warn({
+      request_id: requestId,
+      type: 'auth_service',
+      message: 'Refresh token not found',
+    });
+    throw AppError.auth('Invalid refresh token');
+  }
+
+  // Check if token is revoked
+  if (existingToken.revoked) {
+    logger.warn({
+      request_id: requestId,
+      type: 'auth_service',
+      message: 'Refresh token already revoked - possible token reuse attack',
+      userId: existingToken.user_id,
+    });
+    // Security: revoke all tokens for this user (potential attack)
+    await revokeAllUserTokens(existingToken.user_id);
+    throw AppError.auth('Invalid refresh token');
+  }
+
+  // Check if token is expired
+  if (new Date() > existingToken.expires_at) {
+    logger.warn({
+      request_id: requestId,
+      type: 'auth_service',
+      message: 'Refresh token expired',
+      userId: existingToken.user_id,
+    });
+    // Mark as revoked since it's expired
+    await revokeRefreshToken(existingToken.id);
+    throw AppError.auth('Refresh token expired');
+  }
+
+  // Generate new tokens
+  const newAccessToken = generateAccessToken(existingToken.user_id);
+  const newRefreshToken = generateRefreshToken();
+  const expiresAt = getRefreshTokenExpiration();
+
+  // Use transaction to ensure atomicity
+  await prisma.$transaction([
+    // Revoke the old token
+    prisma.refreshToken.update({
+      where: { id: existingToken.id },
+      data: { revoked: true },
+    }),
+    // Create the new token
+    prisma.refreshToken.create({
+      data: {
+        user_id: existingToken.user_id,
+        token: newRefreshToken,
+        expires_at: expiresAt,
+        revoked: false,
+      },
+    }),
+  ]);
+
+  logger.info({
+    request_id: requestId,
+    type: 'auth_service',
+    message: 'Refresh token rotated successfully',
+    userId: existingToken.user_id,
+  });
+
+  return {
+    token: newAccessToken,
+    refresh_token: newRefreshToken,
+  };
+};
+
 module.exports = {
   login,
   generateAccessToken,
@@ -182,6 +267,7 @@ module.exports = {
   findRefreshToken,
   revokeRefreshToken,
   revokeAllUserTokens,
+  rotateRefreshToken,
   ACCESS_TOKEN_EXPIRES_IN,
   REFRESH_TOKEN_EXPIRES_DAYS,
 };
