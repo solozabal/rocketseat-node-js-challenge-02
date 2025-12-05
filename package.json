@@ -16,7 +16,8 @@
     "test:sessions": "node src/scripts/testAuthSessions.js",
     "test:auth": "node src/scripts/testAuthMiddleware.js",
     "test:refresh": "node src/scripts/testRefreshToken.js",
-    "test:logout": "node src/scripts/testLogout.js"
+    "test:logout": "node src/scripts/testLogout.js",
+    "test:meals": "node src/scripts/testMeals.js"
   },
   "keywords": [
     "nodejs",
