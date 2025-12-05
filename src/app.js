@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 
 const logger = require('./config/logger');
-const { requestIdMiddleware } = require('./middlewares');
+const { requestIdMiddleware, notFoundHandler, errorHandler } = require('./middlewares');
 const routes = require('./routes');
 
 const app = express();
@@ -54,26 +54,10 @@ app.use(
 // API Routes with /v1 prefix
 app.use('/', routes);
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: `Route ${req.method} ${req.originalUrl} not found`,
-  });
-});
+// 404 handler - catches unmatched routes
+app.use(notFoundHandler);
 
-// Error handler
-app.use((err, req, res, next) => {
-  logger.error({
-    request_id: req.id,
-    error: err.message,
-    stack: err.stack,
-  });
-
-  res.status(err.status || 500).json({
-    error: err.name || 'Internal Server Error',
-    message: isProduction ? 'An unexpected error occurred' : err.message,
-  });
-});
+// Global error handler - must be last
+app.use(errorHandler);
 
 module.exports = app;
