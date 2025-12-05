@@ -165,13 +165,90 @@ const revokeRefreshToken = async (tokenId) => {
 /**
  * Revoke all refresh tokens for a user
  * @param {string} userId - User ID
- * @returns {Promise<Object>} Update result
+ * @param {string} [requestId] - Request ID for logging
+ * @returns {Promise<Object>} Update result with count of revoked tokens
  */
-const revokeAllUserTokens = async (userId) => {
-  return prisma.refreshToken.updateMany({
+const revokeAllUserTokens = async (userId, requestId) => {
+  const result = await prisma.refreshToken.updateMany({
     where: { user_id: userId, revoked: false },
     data: { revoked: true },
   });
+
+  logger.info({
+    request_id: requestId,
+    type: 'auth_service',
+    message: 'All user tokens revoked',
+    userId,
+    revokedCount: result.count,
+  });
+
+  return result;
+};
+
+/**
+ * Logout - Revoke refresh tokens for a user
+ * Supports revoking all tokens or a specific token
+ *
+ * NOTE: This function should also be called when user changes password
+ * to ensure all refresh tokens are invalidated.
+ *
+ * @param {string} userId - User ID from authenticated request
+ * @param {string} [refreshToken] - Optional specific token to revoke
+ * @param {string} [requestId] - Request ID for logging
+ * @returns {Promise<Object>} Result with count of revoked tokens
+ */
+const logout = async (userId, refreshToken, requestId) => {
+  // If specific refresh token provided, revoke only that one
+  if (refreshToken) {
+    const existingToken = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
+    });
+
+    // Check if token exists and belongs to the user
+    if (!existingToken || existingToken.user_id !== userId) {
+      logger.warn({
+        request_id: requestId,
+        type: 'auth_service',
+        message: 'Logout - token not found or does not belong to user',
+        userId,
+      });
+      // Still return success - user is logging out anyway
+      return { count: 0 };
+    }
+
+    // Check if already revoked
+    if (existingToken.revoked) {
+      logger.info({
+        request_id: requestId,
+        type: 'auth_service',
+        message: 'Logout - token already revoked',
+        userId,
+      });
+      return { count: 0 };
+    }
+
+    // Revoke the specific token
+    await revokeRefreshToken(existingToken.id);
+
+    logger.info({
+      request_id: requestId,
+      type: 'auth_service',
+      message: 'Logout - specific token revoked',
+      userId,
+    });
+
+    return { count: 1 };
+  }
+
+  // Default: revoke all active tokens for the user
+  logger.info({
+    request_id: requestId,
+    type: 'auth_service',
+    message: 'Logout - revoking all user tokens',
+    userId,
+  });
+
+  return revokeAllUserTokens(userId, requestId);
 };
 
 /**
@@ -261,6 +338,7 @@ const rotateRefreshToken = async (token, requestId) => {
 
 module.exports = {
   login,
+  logout,
   generateAccessToken,
   generateRefreshToken,
   verifyAccessToken,

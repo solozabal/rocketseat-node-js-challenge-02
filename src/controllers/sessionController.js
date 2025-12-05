@@ -51,7 +51,38 @@ const refreshToken = async (req, res, next) => {
   }
 };
 
+/**
+ * Logout - Revoke refresh tokens
+ * POST /v1/logout
+ *
+ * Revokes all active refresh tokens for the authenticated user.
+ * Optionally accepts { refresh_token } to revoke only a specific token.
+ *
+ * @requires Authentication (JWT Bearer token)
+ */
+const logout = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { refresh_token } = req.body || {};
+
+    logger.info({
+      request_id: req.id,
+      type: 'session_controller',
+      message: 'Logout attempt',
+      userId,
+      specificToken: !!refresh_token,
+    });
+
+    await authService.logout(userId, refresh_token, req.id);
+
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   login,
   refreshToken,
+  logout,
 };
