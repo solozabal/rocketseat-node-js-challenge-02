@@ -29,6 +29,29 @@ const login = async (req, res, next) => {
   }
 };
 
+/**
+ * Refresh Token - Rotate tokens
+ * POST /v1/refresh-token
+ */
+const refreshToken = async (req, res, next) => {
+  try {
+    const { refresh_token } = req.body;
+
+    logger.info({
+      request_id: req.id,
+      type: 'session_controller',
+      message: 'Refresh token attempt',
+    });
+
+    const tokens = await authService.rotateRefreshToken(refresh_token, req.id);
+
+    res.status(200).json(tokens);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   login,
+  refreshToken,
 };

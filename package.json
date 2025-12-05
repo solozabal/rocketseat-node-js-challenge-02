@@ -14,7 +14,8 @@
     "test:validation": "node src/scripts/testValidation.js",
     "test:users": "node src/scripts/testUserRegistration.js",
     "test:sessions": "node src/scripts/testAuthSessions.js",
-    "test:auth": "node src/scripts/testAuthMiddleware.js"
+    "test:auth": "node src/scripts/testAuthMiddleware.js",
+    "test:refresh": "node src/scripts/testRefreshToken.js"
   },
   "keywords": [
     "nodejs",
