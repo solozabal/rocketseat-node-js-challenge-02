@@ -11,7 +11,8 @@
     "prisma:migrate": "prisma migrate dev",
     "db:test": "node src/scripts/testConnection.js",
     "db:test-models": "node src/scripts/testModels.js",
-    "test:validation": "node src/scripts/testValidation.js"
+    "test:validation": "node src/scripts/testValidation.js",
+    "test:users": "node src/scripts/testUserRegistration.js"
   },
   "keywords": [
     "nodejs",
@@ -23,6 +24,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.1.0",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
