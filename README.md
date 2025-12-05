@@ -1,11 +1,12 @@
 <div align="center">
   <h1>🍽️ Daily Diet API</h1>
-  <p><b>Daily diet control | Node.js | Prisma | PostgreSQL | JWT | Rocketseat Challenge</b></p>
+  <p><b>Daily diet control | Node.js | Prisma | PostgreSQL | JWT | Docker</b></p>
   <br>
   <a href="https://img.shields.io/badge/Node.js-20+-brightgreen"><img src="https://img.shields.io/badge/Node.js-20+-brightgreen" /></a>
   <a href="https://img.shields.io/badge/PostgreSQL-16+-blue"><img src="https://img.shields.io/badge/PostgreSQL-16+-blue" /></a>
   <a href="https://img.shields.io/badge/Prisma-ORM-orange"><img src="https://img.shields.io/badge/Prisma-ORM-orange" /></a>
   <a href="https://img.shields.io/badge/JWT-Auth-yellow" ><img src="https://img.shields.io/badge/JWT-Auth-yellow" /></a>
+  <a href="https://img.shields.io/badge/Docker-ready-blue?logo=docker&logoColor=white"><img src="https://img.shields.io/badge/Docker-ready-blue?logo=docker&logoColor=white" /></a>
   <a href="https://img.shields.io/badge/Coverage-100%25-success" ><img src="https://img.shields.io/badge/Coverage-100%25-success" /></a>
 </div>
 
@@ -26,6 +27,7 @@ The <b>Daily Diet API</b> is a RESTful API for daily diet tracking, developed fo
 - Smart Rate Limiting per IP
 - Swagger/OpenAPI documentation
 - Custom error handling and standardized responses
+- **Ready for Docker deployment (API and PostgreSQL in containers)**
 
 ---
 
@@ -33,47 +35,67 @@ The <b>Daily Diet API</b> is a RESTful API for daily diet tracking, developed fo
 
 ### Modular Structure
 The project is organized in well-defined layers:
-- **Controllers**: Receive HTTP requests, validate data, and delegate to services.
-- **Services**: Implement business logic (e.g.: streak rules, metrics, token rotation).
-- **Schemas/Validators**: Input validation using Zod.
-- **Middlewares**: Authentication, rate limiting, error handling, requestId, etc.
-- **Prisma**: ORM for modelling and accessing PostgreSQL database.
+
+- **Routing (`routes/`)**: Defines API entry points, split by version (e.g., `v1/`) and mapped to controller actions.
+- **Controllers (`controllers/`)**: Receive HTTP requests, validate input, and delegate to services.
+- **Services (`services/`)**: Contain business logic such as streak calculation, metrics aggregation, user authentication, and token rotation.
+- **Schemas/Validators (`schemas/`, `validators/`)**: Input validation using Zod, ensuring type safety and preventing invalid data at the boundaries.
+- **Middlewares (`middlewares/`)**: Implement authentication, rate limiting, error handling, request ID generation, and request validation.
+- **Error Handling (`errors/`)**: Centralized custom error classes (`AppError`), error codes, and logic for standardized responses.
+- **Utils (`utils/`)**: Utility functions for specific tasks (e.g., streakCalculator, helpers).
+- **Database & ORM (`config/database.js`, `schema.prisma`)**: Connection and modeling via Prisma, targeting a PostgreSQL database.
+- **Logger (`config/logger.js`)**: Centralized logging based on environment for monitoring and debugging.
+- **Swagger/OpenAPI (`config/swagger.js`)**: Automated and interactive API documentation served at `/v1/docs`.
+- **Scripts (`scripts/`)**: Utility scripts for local/manual testing and development automation.
+- **Testing (`tests/`)**: Organized unit and integration tests, including setup and environment helpers.
+- **Docker support**: Complete `Dockerfile` and `docker-compose.yml` to orchestrate API and database for easy deployment and testing.
 
 ### Security
-- JWT authentication with rotating refresh token and configurable expiry.
-- Rate limiting per IP to prevent abuse.
-- Passwords validated and stored with secure hashing.
+- JWT authentication with rotating refresh tokens and configurable expiry.
+- IP-based rate limiting to avoid abusive use.
+- Passwords hashed and safely stored.
 
 ### Metrics & Streak
-- Calculation of user's best streak of meals within the diet.
-- Aggregated metrics per user.
+- Calculation of each user's best streak of compliant meals.
+- Real-time and aggregated diet metrics per user.
 
 ### Testing
-- Unit and integration tests with Vitest.
-- Full coverage of main business flows and rules.
+- Unit tests and integration tests using Vitest.
+- Full coverage of business rules, service logic, and REST endpoints.
+- Scripts and helpers for reproducible and reliable test environments.
 
-### Documentation
-- Swagger available at `/v1/docs` for easy onboarding and integration.
+### 📖 Documentation
+
+- Interactive API documentation is available via **Swagger UI**.
+- Once the API server is running, you can access documentation at the `/v1/docs` route.
+    - **Example:** If running locally with default settings: `http://localhost:3000/v1/docs`
+    - If running inside Docker or on another host/port, adjust the URL accordingly: `http://<your-server-host>:<your-server-port>/v1/docs`
+- The actual Swagger URL may vary depending on your deployment, server settings, or reverse proxy.
+- Use Swagger UI to explore, test, and understand the API endpoints, required fields, authentication flows, and responses.
 
 ---
 
 ## 📦 Installation
 
 ### Local (Node.js)
+
 ```bash
 git clone https://github.com/solozabal/rocketseat-node-js-challenge-02.git
 cd rocketseat-node-js-challenge-02
 npm install
 cp .env.example .env
-# Edit your .env file
+# Edit your .env file with your local PostgreSQL and secrets
 npm run prisma:migrate
 npm run dev
 ```
 
 ### Docker (API + PostgreSQL)
+
 ```bash
 docker-compose up -d
+# To check API logs and confirm success
 docker-compose logs -f api
+# To stop and remove containers:
 docker-compose down
 ```
 
@@ -81,62 +103,104 @@ docker-compose down
 
 ## 🔐 Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | `3000` |
-| `NODE_ENV` | Environment | `development` |
-| `DATABASE_URL` | PostgreSQL URL | - |
-| `JWT_SECRET` | JWT secret | - |
-| `JWT_EXPIRES_IN` | Access token expiry | `15m` |
-| `REFRESH_TOKEN_EXPIRES_IN` | Refresh token expiry | `7d` |
-| `CORS_ORIGIN` | Allowed origins | `http://localhost:3000` |
+| Variable                  | Description               | Default                      |
+|---------------------------|---------------------------|------------------------------|
+| `PORT`                    | Server port               | `3000`                       |
+| `NODE_ENV`                | Environment               | `development`                |
+| `DATABASE_URL`            | PostgreSQL URL            | *(required)*                 |
+| `JWT_SECRET`              | JWT secret                | *(required)*                 |
+| `JWT_EXPIRES_IN`          | Access token expiry       | `15m`                        |
+| `REFRESH_TOKEN_EXPIRES_IN`| Refresh token expiry      | `7d`                         |
+| `CORS_ORIGIN`             | Allowed origins           | `http://localhost:3000`      |
 
----
+**Tip:**  
+Make sure your `.env` file is configured with valid database credentials, JWT secrets, and other required parameters before running the API or tests.  
+For different environments (local, test, production), consider using separate `.env` files (`.env.test`, `.env.production`, etc).
 
 ## 📚 Main Endpoints
 
-| Method | Endpoint           | Description         | Auth |
-|--------|--------------------|---------------------|------|
-| GET    | `/v1/health`       | Health check        | ❌   |
-| POST   | `/v1/users`        | Register user       | ❌   |
-| POST   | `/v1/sessions`     | Login               | ❌   |
-| POST   | `/v1/refresh-token`| Renew tokens        | ❌   |
-| POST   | `/v1/logout`       | Logout              | ✅   |
-| GET    | `/v1/meals`        | List meals          | ✅   |
-| POST   | `/v1/meals`        | Create meal         | ✅   |
-| GET    | `/v1/meals/:id`    | Get meal by id      | ✅   |
-| PUT    | `/v1/meals/:id`    | Update meal         | ✅   |
-| DELETE | `/v1/meals/:id`    | Delete meal         | ✅   |
-| GET    | `/v1/metrics`      | Diet metrics        | ✅   |
+| Method | Endpoint           | Description         | Auth Required |
+|--------|--------------------|---------------------|:------------:|
+| GET    | `/v1/health`       | Health check        | ❌           |
+| POST   | `/v1/users`        | Register user       | ❌           |
+| POST   | `/v1/sessions`     | Login               | ❌           |
+| POST   | `/v1/refresh-token`| Renew tokens        | ❌           |
+| POST   | `/v1/logout`       | Logout              | ✅           |
+| GET    | `/v1/meals`        | List meals          | ✅           |
+| POST   | `/v1/meals`        | Create meal         | ✅           |
+| GET    | `/v1/meals/:id`    | Get meal by id      | ✅           |
+| PUT    | `/v1/meals/:id`    | Update meal         | ✅           |
+| DELETE | `/v1/meals/:id`    | Delete meal         | ✅           |
+| GET    | `/v1/metrics`      | Diet metrics        | ✅           |
 
----
+- ✅ = Requires authentication (JWT Bearer token in header)
+- ❌ = Public endpoint (no authentication required)
 
 ## 🛡️ Authentication
 
-After login, include the JWT token in header:
+This API uses JWT (JSON Web Tokens) for secure authentication and authorization.
+
+After a successful login, you will receive an access token.  
+For any authenticated request, include this token in your request headers:
+
 ```http
-Authorization: Bearer <your_token>
+Authorization: Bearer <your_jwt_token>
 ```
+
+- Certain endpoints require authentication (see "Main Endpoints" for details).
+- Access tokens have a limited lifespan—use the `/v1/refresh-token` endpoint to obtain a new token when needed.
+- Logout (`/v1/logout`) invalidates your refresh token for extra session security.
+
+**Tip:** Store your tokens securely and do not expose them publicly.
+
 
 ---
 
 ## 🧪 Tests & Coverage
 
+Automated tests are a core part of the project, ensuring reliability and maintainability.
+
 ```bash
 # Run all unit and integration tests
 npm test
 
-# Check coverage report
+# Generate a coverage report
 npm run test:coverage
 
 # Run only unit tests
 npm run test:unit
 
-# Run only integration tests (requires API and database running)
+# Run only integration tests (requires API server and database running)
 npm run test:integration
 ```
 
+#### Integration Test Notes
+
+- The API server and PostgreSQL database must be running before starting integration tests.
+- Ensure your test environment variables (such as `DATABASE_URL`, JWT secrets, etc.) are properly configured.
+- By default, integration tests may use a separate test database to prevent data loss.
+
+**Example setup for integration testing:**
+```bash
+# Start database and API server (if using Docker)
+docker-compose up -d
+
+# Set up the test database and apply migrations if needed
+npm run prisma:migrate
+
+# Run integration tests
+npm run test:integration
+```
+
+#### Coverage
+
+- The coverage report demonstrates high reliability, with business logic, validation, and REST endpoints tested.
+- Coverage output can be found in the `/coverage` directory as HTML and summarized statistics.
+
 ---
+
+**Why This Matters?**  
+Comprehensive testing and clear authentication flows demonstrate engineering excellence and reliability—making onboarding easier for developers and impressing recruiters with professional practices.
 
 ## 📁 Project Structure
 
@@ -304,23 +368,32 @@ vitest.config.js
 
 ---
 
-## 📖 Interactive documentation
+## 📖 Interactive Documentation
 
-- <b>Swagger UI:</b> [`/v1/docs`](http://localhost:3000/v1/docs)
-- <b>Swagger JSON:</b> [`/v1/docs.json`](http://localhost:3000/v1/docs.json)
+- **Swagger UI:** Available at `/v1/docs` after starting the server (`http://localhost:3000/v1/docs` by default).
+- **Swagger JSON:** Available at `/v1/docs.json`.
+
+Both endpoints provide interactive, automated API documentation for easy onboarding, exploration, and integration.
 
 ---
 
 ## 💡 Differentials
 
-- 100% test coverage with Vitest
-- Advanced rate limiting
-- Secure refresh token with rotation
-- Scalable and modular architecture
-- Swagger documentation ready for devs and recruiters
-- Standardized error handling for dev experience
+- **100% test coverage** with Vitest (unit & integration).
+- **Ready for Docker**: Simple deployment using Docker and Docker Compose (API & DB).
+- **Advanced rate limiting** middleware for production stability.
+- **Secure JWT authentication** with refresh token rotation.
+- **Modular, scalable and service-oriented architecture**.
+- **Environment variable management** – easy configuration across stages (dev/test/prod).
+- **Swagger/OpenAPI documentation** for fast developer/recruiter onboarding.
+- **Standardized error handling** for great DX.
+- **Automated database migrations** via Prisma.
+- **Separation of unit and integration tests**; easy to execute in any environment.
+- **Flexible setup**: Works locally or in containerized environments.
+
+---
 
 <div align="center">
   <sub>Developed by <b>solozabal</b> for Rocketseat Node.js Challenge 02</sub><br>
-  <sub>Made with 💚 Node.js, Prisma, PostgreSQL, Express, JWT, Vitest</sub>
+  <sub>Made with 💚 Node.js, Prisma, PostgreSQL, Express, JWT, Vitest, Docker</sub>
 </div>
