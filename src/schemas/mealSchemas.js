@@ -55,7 +55,12 @@ const mealIdSchema = z.object({
 });
 
 /**
- * Schema for list query parameters
+ * Helper to validate date format YYYY-MM-DD
+ */
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Schema for list query parameters with filters
  */
 const listMealsQuerySchema = z.object({
   page: z
@@ -71,6 +76,33 @@ const listMealsQuerySchema = z.object({
     .transform((val) => (val ? parseInt(val, 10) : undefined))
     .refine((val) => val === undefined || (Number.isInteger(val) && val >= 1 && val <= 100), {
       message: 'Limit must be between 1 and 100',
+    }),
+  date_from: z
+    .string()
+    .optional()
+    .refine((val) => !val || dateRegex.test(val), {
+      message: 'date_from must be in YYYY-MM-DD format',
+    })
+    .refine((val) => !val || !isNaN(Date.parse(val)), {
+      message: 'date_from must be a valid date',
+    }),
+  date_to: z
+    .string()
+    .optional()
+    .refine((val) => !val || dateRegex.test(val), {
+      message: 'date_to must be in YYYY-MM-DD format',
+    })
+    .refine((val) => !val || !isNaN(Date.parse(val)), {
+      message: 'date_to must be a valid date',
+    }),
+  is_on_diet: z
+    .union([z.boolean(), z.string()])
+    .optional()
+    .transform((val) => {
+      if (typeof val === 'boolean') return val;
+      if (val === 'true') return true;
+      if (val === 'false') return false;
+      return undefined; // Invalid values become undefined (ignored)
     }),
 });
 
