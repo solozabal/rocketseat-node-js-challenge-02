@@ -25,8 +25,8 @@ const validate = (schema, source = 'body') => {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        // Format Zod validation errors
-        const details = error.errors.map((err) => ({
+        // Format Zod validation errors (Zod 4.x uses 'issues' instead of 'errors')
+        const details = error.issues.map((err) => ({
           field: err.path.join('.'),
           message: err.message,
           code: err.code,
