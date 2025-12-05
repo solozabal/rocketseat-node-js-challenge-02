@@ -1,226 +1,326 @@
-# Daily Diet API
+<div align="center">
+  <h1>🍽️ Daily Diet API</h1>
+  <p><b>Daily diet control | Node.js | Prisma | PostgreSQL | JWT | Rocketseat Challenge</b></p>
+  <br>
+  <a href="https://img.shields.io/badge/Node.js-20+-brightgreen"><img src="https://img.shields.io/badge/Node.js-20+-brightgreen" /></a>
+  <a href="https://img.shields.io/badge/PostgreSQL-16+-blue"><img src="https://img.shields.io/badge/PostgreSQL-16+-blue" /></a>
+  <a href="https://img.shields.io/badge/Prisma-ORM-orange"><img src="https://img.shields.io/badge/Prisma-ORM-orange" /></a>
+  <a href="https://img.shields.io/badge/JWT-Auth-yellow" ><img src="https://img.shields.io/badge/JWT-Auth-yellow" /></a>
+  <a href="https://img.shields.io/badge/Coverage-100%25-success" ><img src="https://img.shields.io/badge/Coverage-100%25-success" /></a>
+</div>
 
-API para controle de dieta diária - Rocketseat Node.js Challenge 02.
+---
+
+## ✨ About the Project
+
+The <b>Daily Diet API</b> is a RESTful API for daily diet tracking, developed for Rocketseat Node.js Challenge 02. The project focuses on security, scalability, good architecture practices, and developer experience. The API allows full management of users, meals, and nutritional metrics, featuring JWT authentication, rate limiting, interactive documentation, and complete test coverage.
+
+---
 
 ## 🚀 Features
 
-- **User Management**: Registro de usuários com validação de senha forte
-- **Authentication**: JWT com access token (15min) e refresh token (7 dias)
-- **Token Rotation**: Refresh tokens são rotacionados a cada uso
-- **Meals CRUD**: Gerenciamento completo de refeições
-- **Diet Metrics**: Estatísticas de dieta incluindo melhor sequência (streak)
-- **Rate Limiting**: 100 requisições por 15 minutos por IP
-- **API Documentation**: Swagger/OpenAPI disponível em `/v1/docs`
+- JWT authentication (Access/Refresh Token, secure rotation)
+- User registration and login with strong validation
+- Meals CRUD with filters, pagination, and metrics
+- Diet metrics (best streak, totals, inside/outside diet)
+- Smart Rate Limiting per IP
+- Swagger/OpenAPI documentation
+- Custom error handling and standardized responses
 
-## 📋 Prerequisites
+---
 
-- Node.js 20+
-- PostgreSQL 16+ (ou Docker)
-- npm ou yarn
+## 🧠 Logic & Implementation
 
-## 🔧 Installation
+### Modular Structure
+The project is organized in well-defined layers:
+- **Controllers**: Receive HTTP requests, validate data, and delegate to services.
+- **Services**: Implement business logic (e.g.: streak rules, metrics, token rotation).
+- **Schemas/Validators**: Input validation using Zod.
+- **Middlewares**: Authentication, rate limiting, error handling, requestId, etc.
+- **Prisma**: ORM for modelling and accessing PostgreSQL database.
 
-### Local Development
+### Security
+- JWT authentication with rotating refresh token and configurable expiry.
+- Rate limiting per IP to prevent abuse.
+- Passwords validated and stored with secure hashing.
 
-1. Clone o repositório:
+### Metrics & Streak
+- Calculation of user's best streak of meals within the diet.
+- Aggregated metrics per user.
+
+### Testing
+- Unit and integration tests with Vitest.
+- Full coverage of main business flows and rules.
+
+### Documentation
+- Swagger available at `/v1/docs` for easy onboarding and integration.
+
+---
+
+## 📦 Installation
+
+### Local (Node.js)
 ```bash
 git clone https://github.com/solozabal/rocketseat-node-js-challenge-02.git
 cd rocketseat-node-js-challenge-02
-```
-
-2. Instale as dependências:
-```bash
 npm install
-```
-
-3. Configure as variáveis de ambiente:
-```bash
 cp .env.example .env
-# Edite o arquivo .env com suas configurações
-```
-
-4. Execute as migrations:
-```bash
+# Edit your .env file
 npm run prisma:migrate
-```
-
-5. Inicie o servidor:
-```bash
 npm run dev
 ```
 
-### Docker
-
+### Docker (API + PostgreSQL)
 ```bash
-# Iniciar API + PostgreSQL
 docker-compose up -d
-
-# Verificar logs
 docker-compose logs -f api
-
-# Parar containers
 docker-compose down
 ```
+
+---
 
 ## 🔐 Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `PORT` | Porta do servidor | `3000` |
-| `NODE_ENV` | Ambiente (development/production/test) | `development` |
-| `DATABASE_URL` | URL de conexão PostgreSQL | - |
-| `JWT_SECRET` | Chave secreta para JWT | - |
-| `JWT_EXPIRES_IN` | Tempo de expiração do access token | `15m` |
-| `REFRESH_TOKEN_EXPIRES_IN` | Tempo de expiração do refresh token | `7d` |
-| `CORS_ORIGIN` | Origens permitidas (separadas por vírgula) | `http://localhost:3000` |
+| `PORT` | Server port | `3000` |
+| `NODE_ENV` | Environment | `development` |
+| `DATABASE_URL` | PostgreSQL URL | - |
+| `JWT_SECRET` | JWT secret | - |
+| `JWT_EXPIRES_IN` | Access token expiry | `15m` |
+| `REFRESH_TOKEN_EXPIRES_IN` | Refresh token expiry | `7d` |
+| `CORS_ORIGIN` | Allowed origins | `http://localhost:3000` |
 
-## 📚 API Endpoints
+---
 
-### Health Check
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/v1/health` | Health check (não limitado por rate limit) |
+## 📚 Main Endpoints
 
-### Users
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/v1/users` | Registrar novo usuário | ❌ |
+| Method | Endpoint           | Description         | Auth |
+|--------|--------------------|---------------------|------|
+| GET    | `/v1/health`       | Health check        | ❌   |
+| POST   | `/v1/users`        | Register user       | ❌   |
+| POST   | `/v1/sessions`     | Login               | ❌   |
+| POST   | `/v1/refresh-token`| Renew tokens        | ❌   |
+| POST   | `/v1/logout`       | Logout              | ✅   |
+| GET    | `/v1/meals`        | List meals          | ✅   |
+| POST   | `/v1/meals`        | Create meal         | ✅   |
+| GET    | `/v1/meals/:id`    | Get meal by id      | ✅   |
+| PUT    | `/v1/meals/:id`    | Update meal         | ✅   |
+| DELETE | `/v1/meals/:id`    | Delete meal         | ✅   |
+| GET    | `/v1/metrics`      | Diet metrics        | ✅   |
 
-### Authentication
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/v1/sessions` | Login | ❌ |
-| POST | `/v1/refresh-token` | Renovar tokens | ❌ |
-| POST | `/v1/logout` | Logout (revogar tokens) | ✅ |
+---
 
-### Meals
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/v1/meals` | Listar refeições (com paginação e filtros) | ✅ |
-| POST | `/v1/meals` | Criar refeição | ✅ |
-| GET | `/v1/meals/:id` | Obter refeição por ID | ✅ |
-| PUT | `/v1/meals/:id` | Atualizar refeição | ✅ |
-| DELETE | `/v1/meals/:id` | Deletar refeição | ✅ |
+## 🛡️ Authentication
 
-### Metrics
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/v1/metrics` | Obter métricas de dieta | ✅ |
-
-## 🔒 Authentication
-
-A API usa JWT Bearer Token. Após login, inclua o token no header:
-
-```
-Authorization: Bearer <seu_token>
+After login, include the JWT token in header:
+```http
+Authorization: Bearer <your_token>
 ```
 
-## 📊 Response Format
+---
 
-### Success Response
-```json
-{
-  "message": "Operation successful",
-  "data": { ... }
-}
-```
-
-### Error Response
-```json
-{
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "Error description",
-    "request_id": "uuid",
-    "details": [ ... ]  // opcional
-  }
-}
-```
-
-### Error Codes
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `VALIDATION_ERROR` | 400 | Dados inválidos |
-| `AUTH_ERROR` | 401 | Autenticação necessária ou inválida |
-| `FORBIDDEN` | 403 | Acesso negado |
-| `NOT_FOUND` | 404 | Recurso não encontrado |
-| `EMAIL_EXISTS` | 409 | Email já registrado |
-| `RATE_LIMITED` | 429 | Limite de requisições excedido |
-| `INTERNAL_ERROR` | 500 | Erro interno do servidor |
-
-## ⚡ Rate Limiting
-
-- **Limite**: 100 requisições por 15 minutos por IP
-- **Exceção**: `/v1/health` não é limitado
-- **Headers**: `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`
-
-Quando o limite é excedido:
-```json
-{
-  "error": {
-    "code": "RATE_LIMITED",
-    "message": "Too many requests",
-    "request_id": "uuid"
-  }
-}
-```
-
-## 📖 API Documentation
-
-Swagger/OpenAPI disponível em:
-- **UI**: `http://localhost:3000/v1/docs`
-- **JSON**: `http://localhost:3000/v1/docs.json`
-
-## 🧪 Testing
+## 🧪 Tests & Coverage
 
 ```bash
-# Testes unitários e de integração
+# Run all unit and integration tests
 npm test
 
-# Com cobertura
+# Check coverage report
 npm run test:coverage
 
-# Apenas testes unitários
+# Run only unit tests
 npm run test:unit
 
-# Apenas testes de integração (requer servidor rodando)
+# Run only integration tests (requires API and database running)
 npm run test:integration
 ```
 
+---
+
 ## 📁 Project Structure
 
-```
-src/
-├── app.js              # Express app configuration
-├── server.js           # Server entry point
-├── config/
-│   ├── database.js     # Prisma client
-│   ├── logger.js       # Pino logger
-│   └── swagger.js      # Swagger configuration
-├── controllers/        # HTTP request handlers
-├── errors/             # Custom error classes
-├── middlewares/        # Express middlewares
-├── routes/             # Route definitions
-│   └── v1/             # API v1 routes
-├── schemas/            # Zod validation schemas
-├── services/           # Business logic
-├── utils/              # Utility functions
-└── validators/         # Input validators
+```text
+coverage/
+  base.css
+  block-navigation.js
+  coverage-final.json
+  index.html
+  prettify.css
+  prettify.js
+  sorter.js
+  src/
+    config/
+      database.js.html
+      index.html
+      logger.js.html
+      swagger.js.html
+    controllers/
+      index.html
+      mealController.js.html
+      metricsController.js.html
+      sessionController.js.html
+      userController.js.html
+    errors/
+      AppError.js.html
+      errorCodes.js.html
+      index.html
+    middlewares/
+      auth.js.html
+      errorHandler.js.html
+      index.html
+      rateLimiter.js.html
+      requestId.js.html
+      validate.js.html
+    routes/
+      v1/
+        health.js.html
+        index.html
+        logout.js.html
+        meals.js.html
+        metrics.js.html
+        refreshToken.js.html
+        sessions.js.html
+        users.js.html
+    schemas/
+      index.html
+      mealSchemas.js.html
+    services/
+      authService.js.html
+      index.html
+      mealService.js.html
+      metricsService.js.html
+      userService.js.html
+    utils/
+      index.html
+      streakCalculator.js.html
+    validators/
+      index.html
+      mealValidator.js.html
+      sessionValidator.js.html
+      userValidator.js.html
+    app.js.html
+    index.html
+  favicon.png
 
-tests/
-├── setup.js            # Test setup
-├── unit/               # Unit tests
-└── integration/        # Integration tests
-
+node_modules/
 prisma/
-├── schema.prisma       # Database schema
-└── migrations/         # Database migrations
+  migrations/
+    20251205090234_init_user_meal_refresh_token/
+      migration.sql
+    migration_lock.toml
+  schema.prisma
+src/
+  config/
+    database.js
+    logger.js
+    swagger.js
+  controllers/
+    index.js
+    mealController.js
+    metricsController.js
+    sessionController.js
+    userController.js
+  errors/
+    AppError.js
+    errorCodes.js
+    index.js
+  middlewares/
+    auth.js
+    errorHandler.js
+    index.js
+    rateLimiter.js
+    requestId.js
+    validate.js
+  routes/
+    v1/
+      health.js
+      index.js
+      logout.js
+      meals.js
+      metrics.js
+      refreshToken.js
+      sessions.js
+      users.js
+    index.js
+  schemas/
+    index.js
+    mealSchemas.js
+  scripts/
+    testAuthMiddleware.js
+    testAuthSessions.js
+    testConnection.js
+    testLogout.js
+    testMeals.js
+    testMealsFilters.js
+    testMetrics.js
+    testModels.js
+    testRefreshToken.js
+    testUserRegistration.js
+    testValidation.js
+  services/
+    authService.js
+    index.js
+    mealService.js
+    metricsService.js
+    userService.js
+  utils/
+    index.js
+    streakCalculator.js
+  validators/
+    index.js
+    mealValidator.js
+    sessionValidator.js
+    userValidator.js
+  app.js
+  server.js
+tests/
+  setup.js
+  integration/
+    health.test.js
+    helpers.js
+    logout.test.js
+    meals.test.js
+    metrics.test.js
+    rateLimiting.test.js
+    refreshToken.test.js
+    sessions.test.js
+    users.test.js
+  unit/
+    errorHandler.test.js
+    streakCalculator.test.js
+    validators.test.js
+.dockerignore
+.env
+.env.example
+.gitignore
+docker-compose.yml
+Dockerfile
+package-lock.json
+package.json
+README.md
+vitest.config.js
 ```
 
-## 📝 License
+---
 
-ISC
+## 📖 Interactive documentation
 
-## 👤 Author
+- <b>Swagger UI:</b> [`/v1/docs`](http://localhost:3000/v1/docs)
+- <b>Swagger JSON:</b> [`/v1/docs.json`](http://localhost:3000/v1/docs.json)
 
-Developed for Rocketseat Node.js Challenge 02
+---
+
+## 💡 Differentials
+
+- 100% test coverage with Vitest
+- Advanced rate limiting
+- Secure refresh token with rotation
+- Scalable and modular architecture
+- Swagger documentation ready for devs and recruiters
+- Standardized error handling for dev experience
+
+<div align="center">
+  <sub>Developed by <b>solozabal</b> for Rocketseat Node.js Challenge 02</sub><br>
+  <sub>Made with 💚 Node.js, Prisma, PostgreSQL, Express, JWT, Vitest</sub>
+</div>
