@@ -2,6 +2,7 @@ const requestIdMiddleware = require('./requestId');
 const { validate, validateBody, validateQuery, validateParams } = require('./validate');
 const { notFoundHandler, errorHandler } = require('./errorHandler');
 const { authenticate, optionalAuth } = require('./auth');
+const rateLimiter = require('./rateLimiter');
 
 module.exports = {
   requestIdMiddleware,
@@ -13,4 +14,5 @@ module.exports = {
   errorHandler,
   authenticate,
   optionalAuth,
+  rateLimiter,
 };
