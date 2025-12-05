@@ -9,7 +9,7 @@ COPY prisma ./prisma/
 
 # Install dependencies (need openssl for Prisma on Debian)
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
-RUN npm ci --only=production
+RUN npm ci
 
 # Generate Prisma client
 RUN npx prisma generate
