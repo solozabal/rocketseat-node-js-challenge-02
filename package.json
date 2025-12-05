@@ -18,7 +18,8 @@
     "test:refresh": "node src/scripts/testRefreshToken.js",
     "test:logout": "node src/scripts/testLogout.js",
     "test:meals": "node src/scripts/testMeals.js",
-    "test:meals-filters": "node src/scripts/testMealsFilters.js"
+    "test:meals-filters": "node src/scripts/testMealsFilters.js",
+    "test:metrics": "node src/scripts/testMetrics.js"
   },
   "keywords": [
     "nodejs",
