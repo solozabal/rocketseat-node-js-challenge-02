@@ -3,6 +3,7 @@ const healthRoutes = require('./health');
 const userRoutes = require('./users');
 const sessionRoutes = require('./sessions');
 const refreshTokenRoutes = require('./refreshToken');
+const logoutRoutes = require('./logout');
 const mealRoutes = require('./meals');
 const metricsRoutes = require('./metrics');
 const { authenticate } = require('../../middlewares/auth');
@@ -20,6 +21,9 @@ router.use('/sessions', sessionRoutes);
 
 // Refresh token routes
 router.use('/refresh-token', refreshTokenRoutes);
+
+// Logout routes (requires authentication)
+router.use('/logout', authenticate, logoutRoutes);
 
 // Protected routes (require authentication)
 router.use('/meals', authenticate, mealRoutes);

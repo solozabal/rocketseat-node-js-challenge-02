@@ -15,7 +15,8 @@
     "test:users": "node src/scripts/testUserRegistration.js",
     "test:sessions": "node src/scripts/testAuthSessions.js",
     "test:auth": "node src/scripts/testAuthMiddleware.js",
-    "test:refresh": "node src/scripts/testRefreshToken.js"
+    "test:refresh": "node src/scripts/testRefreshToken.js",
+    "test:logout": "node src/scripts/testLogout.js"
   },
   "keywords": [
     "nodejs",
