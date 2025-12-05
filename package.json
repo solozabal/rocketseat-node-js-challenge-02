@@ -12,7 +12,8 @@
     "db:test": "node src/scripts/testConnection.js",
     "db:test-models": "node src/scripts/testModels.js",
     "test:validation": "node src/scripts/testValidation.js",
-    "test:users": "node src/scripts/testUserRegistration.js"
+    "test:users": "node src/scripts/testUserRegistration.js",
+    "test:sessions": "node src/scripts/testAuthSessions.js"
   },
   "keywords": [
     "nodejs",
@@ -29,6 +30,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
     "pg": "^8.16.3",
     "pino": "^10.1.0",
